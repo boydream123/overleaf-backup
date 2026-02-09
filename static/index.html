@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overleaf 备份管理系统</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .stat-card {
+      background: rgba(255,255,255,0.2);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      transition: all 0.3s;
+    }
+    
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    
+    .tab:hover {
+      color: #667eea;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .section {
+      margin-bottom: 40px;
+    }
+    
+    .section h2 {
+      color: #333;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+    }
+    
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    small {
+      display: block;
+      margin-top: 5px;
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-success:hover:not(:disabled) {
+      background: #218838;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background: #c82333;
+    }
+    
+    .project-list {
+      display: grid;
+      gap: 15px;
+    }
+    
+    .project-item {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .project-info {
+      flex: 1;
+    }
+    
+    .project-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .project-id {
+      color: #666;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    
+    .project-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-right: 10px;
+    }
+    
+    .status.enabled {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status.disabled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .message {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    .add-project-form {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .backup-output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-top: 15px;
+      display: none;
+    }
+    
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    
+    .config-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+    }
+    
+    .config-card h3 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🗂️ Overleaf 备份管理系统</h1>
+      <p>管理多个 Overleaf 项目的自动备份</p>
+      <div class="stats" id="stats">
+        <!-- 统计数据将在这里动态加载 -->
+      </div>
+    </div>
+    
+    <div class="content">
+      <div id="message" class="message"></div>
+      
+      <!-- 标签页 -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('projects')">📋 项目管理</button>
+        <button class="tab" onclick="switchTab('backup')">🚀 备份</button>
+        <button class="tab" onclick="switchTab('settings')">⚙️ 设置</button>
+      </div>
+      
+      <!-- 项目管理标签页 -->
+      <div id="tab-projects" class="tab-content active">
+        <!-- 添加项目 -->
+        <div class="section">
+          <h2>➕ 添加新项目</h2>
+          <div class="add-project-form">
+            <div class="form-group">
+              <label>项目 ID</label>
+              <input type="text" id="new_project_id" placeholder="697f752d1b7f3f586b45ed5e">
+              <small>从项目 URL 中获取，例如: overleaf.com/project/<strong>697f752d1b7f3f586b45ed5e</strong></small>
+            </div>
+            <div class="form-group">
+              <label>项目名称</label>
+              <input type="text" id="new_project_name" placeholder="我的论文">
+            </div>
+            <button class="btn btn-primary" onclick="addProject()">添加项目</button>
+          </div>
+        </div>
+        
+        <!-- 项目列表 -->
+        <div class="section">
+          <h2>📋 项目列表</h2>
+          <div id="project-list" class="project-list">
+            <!-- 项目将在这里动态加载 -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- 备份标签页 -->
+      <div id="tab-backup" class="tab-content">
+        <div class="section">
+          <h2>🚀 手动执行备份</h2>
+          <p style="margin-bottom: 20px; color: #666;">立即备份所有启用的项目</p>
+          <button class="btn btn-success" id="backup-btn" onclick="runBackup()">立即执行备份</button>
+          <div id="backup-output" class="backup-output"></div>
+        </div>
+      </div>
+      
+      <!-- 设置标签页 -->
+      <div id="tab-settings" class="tab-content">
+        
+        <!-- 备份配置 -->
+        <div class="section">
+          <h2>📦 备份配置</h2>
+          <div class="config-card">
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Overleaf URL</label>
+                <input type="text" id="overleaf_url" placeholder="https://overleaf.boydream.work">
+                <small>你的 Overleaf 服务器地址</small>
+              </div>
+              <div class="form-group">
+                <label>备份目录</label>
+                <input type="text" id="backup_dir" placeholder="./Backup">
+                <small>备份文件存储路径</small>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Cookie（用于身份验证）</label>
+              <input type="password" id="cookie" placeholder="粘贴你的 Cookie">
+              <small>从浏览器开发者工具中获取，用于下载项目文件</small>
+            </div>
+            <div class="grid-3">
+              <div class="form-group">
+                <label>保留备份数量</label>
+                <input type="number" id="keep_last" placeholder="5" value="5" min="1" max="100">
+                <small>每个项目保留最近 N 个备份</small>
+              </div>
+              <div class="form-group">
+                <label>自动备份间隔（分钟）</label>
+                <input type="number" id="backup_interval" placeholder="15" value="15" min="1" max="1440">
+                <small>定时备份的时间间隔</small>
+              </div>
+              <div class="form-group">
+                <label>超时时间（秒）</label>
+                <input type="number" id="timeout" placeholder="300" value="300" min="30" max="3600">
+                <small>单个项目下载超时</small>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="checkbox-group">
+                <input type="checkbox" id="auto_backup">
+                <label for="auto_backup" style="margin: 0;">启用自动备份</label>
+              </div>
+              <small>勾选后将按照设定的间隔自动执行备份（需重启服务）</small>
+            </div>
+            <button class="btn btn-success" onclick="saveBackupConfig()">💾 保存备份配置</button>
+          </div>
+        </div>
+        
+        <!-- 服务器配置 -->
+        <div class="section">
+          <h2>🖥️ 服务器配置</h2>
+          <div class="config-card">
+            <div class="grid-3">
+              <div class="form-group">
+                <label>监听地址</label>
+                <input type="text" id="server_host" placeholder="0.0.0.0" value="0.0.0.0">
+                <small>0.0.0.0 允许外部访问</small>
+              </div>
+              <div class="form-group">
+                <label>端口</label>
+                <input type="number" id="server_port" placeholder="5000" value="5000" min="1" max="65535">
+                <small>Web 服务监听端口</small>
+              </div>
+              <div class="form-group">
+                <label style="opacity: 0;">占位</label>
+                <div class="checkbox-group" style="margin-top: 12px;">
+                  <input type="checkbox" id="server_debug">
+                  <label for="server_debug" style="margin: 0;">调试模式</label>
+                </div>
+                <small>启用后显示详细错误信息</small>
+              </div>
+            </div>
+            <button class="btn btn-success" onclick="saveServerConfig()">💾 保存服务器配置</button>
+            <small style="color: #dc3545; margin-top: 10px;">⚠️ 修改服务器配置后需要手动重启服务才能生效</small>
+          </div>
+        </div>
+        
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    let currentTab = 'projects';
+    
+    // 切换标签页
+    function switchTab(tabName) {
+      // 隐藏所有标签内容
+      document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // 移除所有标签的激活状态
+      document.querySelectorAll('.tab').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // 显示选中的标签内容
+      document.getElementById('tab-' + tabName).classList.add('active');
+      
+      // 激活选中的标签
+      event.target.classList.add('active');
+      
+      currentTab = tabName;
+    }
+    
+    // 加载统计数据
+    function loadStats() {
+      fetch('/api/status')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('stats').innerHTML = `
+            <div class="stat-card">
+              <div class="stat-value">${data.total_projects}</div>
+              <div class="stat-label">总项目数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.enabled_projects}</div>
+              <div class="stat-label">启用项目</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.total_backup_files}</div>
+              <div class="stat-label">备份文件</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.total_backup_size_human}</div>
+              <div class="stat-label">总备份大小</div>
+            </div>
+          `;
+        })
+        .catch(err => console.error('加载统计数据失败:', err));
+    }
+    
+    // 加载配置
+    function loadConfig() {
+      fetch('/api/config')
+        .then(res => res.json())
+        .then(data => {
+          // 备份配置
+          document.getElementById('overleaf_url').value = data.backup.overleaf_url || '';
+          document.getElementById('backup_dir').value = data.backup.backup_dir || './Backup';
+          document.getElementById('cookie').value = data.backup.cookie || '';
+          document.getElementById('keep_last').value = data.backup.keep_last || 5;
+          document.getElementById('backup_interval').value = data.backup.backup_interval || 15;
+          document.getElementById('timeout').value = data.backup.timeout || 300;
+          document.getElementById('auto_backup').checked = data.backup.auto_backup || false;
+          
+          // 服务器配置
+          document.getElementById('server_host').value = data.server.host || '0.0.0.0';
+          document.getElementById('server_port').value = data.server.port || 5000;
+          document.getElementById('server_debug').checked = data.server.debug || false;
+          
+          // 项目列表
+          renderProjects(data.projects || []);
+        })
+        .catch(err => showMessage('加载配置失败: ' + err.message, 'error'));
+    }
+    
+    // 渲染项目列表
+    function renderProjects(projects) {
+      const container = document.getElementById('project-list');
+      if (projects.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">暂无项目，请添加新项目</p>';
+        return;
+      }
+      
+      container.innerHTML = projects.map((project, index) => `
+        <div class="project-item">
+          <div class="project-info">
+            <div class="project-name">
+              <span class="status ${project.enabled ? 'enabled' : 'disabled'}">
+                ${project.enabled ? '✓ 已启用' : '✗ 已禁用'}
+              </span>
+              ${project.name}
+            </div>
+            <div class="project-id">ID: ${project.id}</div>
+          </div>
+          <div class="project-actions">
+            <button class="btn btn-primary" onclick="toggleProject(${index})">
+              ${project.enabled ? '禁用' : '启用'}
+            </button>
+            <button class="btn btn-danger" onclick="deleteProject(${index})">删除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 保存备份配置
+    function saveBackupConfig() {
+      const config = {
+        overleaf_url: document.getElementById('overleaf_url').value,
+        backup_dir: document.getElementById('backup_dir').value,
+        cookie: document.getElementById('cookie').value,
+        keep_last: parseInt(document.getElementById('keep_last').value) || 5,
+        backup_interval: parseInt(document.getElementById('backup_interval').value) || 15,
+        timeout: parseInt(document.getElementById('timeout').value) || 300,
+        auto_backup: document.getElementById('auto_backup').checked
+      };
+      
+      fetch('/api/config/backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      })
+      .then(res => res.json())
+      .then(data => {
+        showMessage(data.message || '备份配置保存成功！', 'success');
+        loadStats();
+      })
+      .catch(err => showMessage('保存失败: ' + err.message, 'error'));
+    }
+    
+    // 保存服务器配置
+    function saveServerConfig() {
+      const config = {
+        host: document.getElementById('server_host').value,
+        port: parseInt(document.getElementById('server_port').value) || 5000,
+        debug: document.getElementById('server_debug').checked
+      };
+      
+      fetch('/api/config/server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      })
+      .then(res => res.json())
+      .then(data => {
+        showMessage(data.message || '服务器配置保存成功！需要重启服务生效。', 'success');
+      })
+      .catch(err => showMessage('保存失败: ' + err.message, 'error'));
+    }
+    
+    // 添加项目
+    function addProject() {
+      const id = document.getElementById('new_project_id').value.trim();
+      const name = document.getElementById('new_project_name').value.trim();
+      
+      if (!id || !name) {
+        showMessage('请填写项目 ID 和名称', 'error');
+        return;
+      }
+      
+      fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name, enabled: true })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showMessage(data.message || '项目添加成功！', 'success');
+          document.getElementById('new_project_id').value = '';
+          document.getElementById('new_project_name').value = '';
+          loadConfig();
+          loadStats();
+        } else {
+          showMessage('添加失败: ' + data.error, 'error');
+        }
+      })
+      .catch(err => showMessage('添加失败: ' + err.message, 'error'));
+    }
+    
+    // 切换项目启用状态
+    function toggleProject(index) {
+      fetch(`/api/projects/${index}/toggle`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          showMessage(data.message || '状态更新成功！', 'success');
+          loadConfig();
+          loadStats();
+        })
+        .catch(err => showMessage('更新失败: ' + err.message, 'error'));
+    }
+    
+    // 删除项目
+    function deleteProject(index) {
+      if (!confirm('确定要删除这个项目吗？备份文件不会被删除。')) return;
+      
+      fetch(`/api/projects/${index}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          showMessage(data.message || '项目删除成功！', 'success');
+          loadConfig();
+          loadStats();
+        })
+        .catch(err => showMessage('删除失败: ' + err.message, 'error'));
+    }
+    
+    // 执行备份
+    function runBackup() {
+      const btn = document.getElementById('backup-btn');
+      const output = document.getElementById('backup-output');
+      
+      btn.disabled = true;
+      btn.textContent = '正在备份...';
+      output.style.display = 'block';
+      output.textContent = '正在执行备份，请稍候...\n';
+      
+      showMessage('正在执行备份，请稍候...', 'info');
+      
+      fetch('/api/backup', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          btn.disabled = false;
+          btn.textContent = '立即执行备份';
+          
+          if (data.success) {
+            showMessage('备份执行完成！', 'success');
+            output.textContent = data.output;
+            loadStats();
+          } else {
+            showMessage('备份失败: ' + data.error, 'error');
+            output.textContent = '错误信息:\n' + data.error + '\n\n输出:\n' + data.output;
+          }
+        })
+        .catch(err => {
+          btn.disabled = false;
+          btn.textContent = '立即执行备份';
+          showMessage('备份失败: ' + err.message, 'error');
+          output.textContent = '网络错误: ' + err.message;
+        });
+    }
+    
+    // 显示消息
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = 'message ' + type;
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 5000);
+    }
+    
+    // 页面加载时读取配置和统计
+    loadConfig();
+    loadStats();
+    
+    // 每 30 秒刷新一次统计数据
+    setInterval(loadStats, 30000);
+  </script>
+</body>
+</html>
