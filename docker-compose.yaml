@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  overleaf-backup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: overleaf-backup
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      # 持久化备份数据
+      - ./Backup:/app/Backup
+      # 持久化配置文件
+      - ./config.json:/app/config.json
+      # 持久化静态文件（如果需要自定义）
+      - ./static:/app/static
+    environment:
+      # Python 环境变量
+      - PYTHONUNBUFFERED=1
+      # 时区设置
+      - TZ=Asia/Shanghai
+    networks:
+      - overleaf-backup-network
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:5000/api/status')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  overleaf-backup-network:
+    driver: bridge
